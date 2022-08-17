@@ -23,6 +23,7 @@ app.use(morgan('dev'))
 app.use('/products', ProductRouter)
 app.use('/category', CategoryRouter)
 app.use('/users', UserRouter)
+app.use('/img', express.static('./upload'))
 
 app.use(bodyParser.json())
 app.all('*', (req, res, next) => {

@@ -1,13 +1,15 @@
 const express = require('express')
 const router = express.Router()
 const productController = require('../controllers/product')
-const commonMiddleware = require('../middleware/commonjs')
+const { protect } = require('../middleware/auth')
+const upload = require('../middleware/upload')
 
 router
-  .get('/', productController.getAllProduct)
-  .get('/:id', productController.getProduct)
-  .post('/', commonMiddleware, productController.insert)
-  .put('/:id', productController.update)
-  .delete('/:id', productController.delete)
+  .get('/all', protect, productController.getAllProducts)
+  .get('/', protect, productController.sort)
+  .get('/:id', protect, productController.getProduct)
+  .post('/', protect, upload.single('photo'), productController.insert)
+  .put('/:id', protect, upload.single('photo'), productController.update)
+  .delete('/:id', protect, productController.delete)
 
 module.exports = router

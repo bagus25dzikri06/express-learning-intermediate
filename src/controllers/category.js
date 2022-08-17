@@ -1,5 +1,6 @@
 const categoryModel = require('../models/category')
 const createErrors = require('http-errors')
+const { success, failed } = require('../helper/common')
 const categoryController = {
   sort: async (req, res) => {
     try{
@@ -15,36 +16,35 @@ const categoryController = {
       const {rows: [count]} = await categoryModel.countCategory()
       const totalData = parseInt(count.count)
       const totalPage = Math.ceil(totalData/limit)
+      const pagination = {
+        currentPage: page,
+        limit: limit,
+        totalData: totalData,
+        totalPage: totalPage
+      }
       
-      res.status(200).json({
-        pagination:{
-          currentPage: page,
-          limit: limit,
-          totalData: totalData,
-          totalPage: totalPage
-        },
-        data: result.rows
-      })
-    }catch(error){
-      console.log(error);
+      return success(res, result.rows, 'success', 'Get category sort and searching successfully', pagination)
+    }catch(err){
+      return failed(res, err, 'failed', 'Get category sort and searching failed')
     }
   },
-  getAllCategory: (req, res) => {
-    categoryModel.selectAll()
-      .then(
-        result => res.json(result.rows)
-      )
-      .catch(err => res.send(err)
-      )
+  getAllCategory: async (req, res) => {
+    try {
+      const result = await categoryModel.selectAll()
+      return success(res, result.rows, 'success', 'Get all categories successfully')
+    } catch (err) {
+      return failed(res, err, 'failed', 'Get all categories failed')
+    }
   },
-  getCategory: (req, res) => {
-    const id = Number(req.params.id)
-    categoryModel.select(id)
-      .then(
-        result => res.json(result.rows)
-      )
-      .catch(err => res.send(err)
-      )
+  getCategory: async (req, res) => {
+    const { id } = req.params
+    try {
+      const result = await categoryModel.select(id)
+      if (result.rowCount === 0) throw new createErrors.BadRequest('Category has not been added')
+      return success(res, result.rows, 'success', 'Get category based by ID successfully')
+    } catch (err) {
+      return failed(res, err.message, 'failed', 'Get category based by ID failed')
+    }
   },
   insert: async (req, res) => {
     const { name } = req.body
@@ -53,43 +53,28 @@ const categoryController = {
       if (result.rowCount > 0) throw new createErrors.BadRequest('This category has been available')
 
       const data = await categoryModel.insert(name)
-      res.status(201).json({
-        message: 'Category is created',
-        categoryData: data.rows[0]
-      })
+      return success(res, data.rows, 'success', 'Category is created')
     } catch (err) {
-      res.status(500).json({
-        message: err.message
-      })
+      return failed(res, err.message, 'failed', 'Category is not created')
     }
   },
   update: async (req, res) => {
-    const id = Number(req.params.id)
-    const name = req.body.name
+    const { id } = req.params
+    const { name } = req.body
     try {
       const result = await categoryModel.update(id, name)
-      res.status(200).json({
-        message: 'Category is updated',
-        data: result
-      })
+      return success(res, result, 'success', 'Category is created')
     } catch (err) {
-      res.status(500).json({
-        message: err
-      })
+      return failed(res, err, 'failed', 'Category is not created')
     }
   },
   delete: async (req, res) => {
-    const id = Number(req.params.id)
+    const { id } = req.params
     try {
       const result = await categoryModel.deleteCategory(id)
-      res.status(200).json({
-        message: 'Category is deleted',
-        data: result
-      })
+      return success(res, result, 'success', 'Category is deleted')
     } catch (err) {
-      res.status(500).json({
-        message: err
-      })
+      return failed(res, err, 'failed', 'Category is not created')
     }
   }
 }
